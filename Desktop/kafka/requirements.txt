@@ -1,0 +1,2 @@
+kafka-python==2.0.2
+json_lines==0.5.0

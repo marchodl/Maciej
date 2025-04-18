@@ -1,0 +1,166 @@
+kafka_overview: |
+  Apache Kafka is a distributed streaming platform designed to handle real-time or near-real-time data streams. It acts as a log of events that have happened log of events (messages) in an ordered, immutable sequence.,
+   allowing you to store, process, and analyze data as it is generated. Kafka is:
+  - Resilient: It can handle failures and ensure data is not lost.
+  - Infinite Retention: Kafka can store data indefinitely (if configured to do so), making it possible to replay events from the beginning of time.
+
+kafka_brokers: |
+  Kafka Brokers are the servers that make up a Kafka cluster. They store the data (partitions) for topics. A Kafka cluster typically has an odd number of brokers (e.g., 3, 5, 7) 
+  for fault tolerance and leader election. One broker is elected as the leader for a partition, and the others act as followers for replication.
+
+topics: |
+  A topic is a category or feed name to which data is sent by producers and consumed by consumers. Topics are divided into partitions for scalability and parallelism. 
+  Each partition is an ordered, immutable sequence of messages. Each message in a partition has a unique identifier called an offset.
+
+producers_and_consumers: |
+  Producers are applications that create and send messages to Kafka topics. They can send messages with or without a key. If a key is provided, messages with the same key are stored in the same partition. 
+  Producers receive an acknowledgement when a message is successfully written to a topic.
+  Consumers are applications that read and process messages from Kafka topics. They can read from one or more partitions of a topic. Consumers track their progress using the offset of the last message they processed.
+
+messages: |
+  A message is the unit of data in Kafka. It consists of:
+  - Key (optional): Used to determine the partition where the message is stored.
+  - Value: The actual data or payload.
+  - Offset: A unique identifier for the message within a partition.
+  - Timestamp: When the message was produced.
+
+how_it_works_together: |
+  Producers create messages and send them to topics in the Kafka cluster. The Kafka cluster consists of multiple brokers that store topics and partitions. Consumers read messages from topics and process the data.
+  Topics are divided into partitions, and each partition is an ordered log of messages identified by offsets. Messages contain a key, value, offset, and timestamp.
+
+visualization: |
+  +-------------------+       +-------------------+       +-------------------+
+  |    Producer       |       |    Kafka Cluster  |       |    Consumer       |
+  |                   |       |                   |       |                   |
+  |  - Creates        |       |  - Brokers (e.g., |       |  - Reads          |
+  |    messages       | ----> |    3, 5, 7)       | ----> |    messages       |
+  |  - Sends to       |       |  - Stores topics  |       |  - Processes      |
+  |    topics         |       |    and partitions |       |    data           |
+  +-------------------+       +-------------------+       +-------------------+
+                                    |
+                                    |  (Partitions)
+                                    v
+                            +-------------------+
+                            |    Topic          |
+                            |                   |
+                            |  - Partition 1    |
+                            |  - Partition 2    |
+                            |  - Partition 3    |
+                            +-------------------+
+                                    |
+                                    |  (Messages)
+                                    v
+                            +-------------------+
+                            |    Message        |
+                            |                   |
+                            |  - Key            |
+                            |  - Value          |
+                            |  - Offset         |
+                            +-------------------+
+                          
+
+# Detailed Explanation of the Chart
+Producer: |
+  Creates messages (key-value pairs).
+  Sends messages to a specific topic in the Kafka cluster. receive acknowledgment.
+  If a key is provided, Kafka ensures all messages with the same key go to the same partition.
+
+Kafka Cluster: |
+  Consists of multiple brokers (servers). A broker is a EC2 instance
+  Brokers store topics, which are divided into partitions.
+  Each partition is an ordered log of messages, identified by offsets.
+  If the replication factor is 3, you can lose up to 2 brokers (leaving 1 broker with the data) without losing data. Broker 2 and Broker 3 are followers and store identical replicas of the data.
+  Each partiton has a leader a broker leader. If a partiton is stored in broker 1 ( leader ) & 3 ( replica). 
+  if broker 1 go down and is the leader, kafka will write to broker 3 and becomes leader. Once broker 1 is alive all is copied from broker 3 to 1 again.
+
+Consumer: |
+  Reads messages from one or more partitions of a topic. it may not get the message in the same order they arrive from producer.
+  Tracks its progress using the offset of the last message it processed.
+  Processes the data in real time or near real time.
+
+Topic: |
+  A logical category for organizing data. think of it as a distributed table, append only.
+  Divided into partitions for scalability and parallelism. each partition live in a different broker ( partition are break into multiple broker, each partition has a different content except if you add replication factor ). a topic of odd partition can be stored in multiple cluster.
+  each topic stores the message in the order they arrive.
+  topic can hold all historical data from the beginning of time, but this depends on how the topic is configured. By default, Kafka retains messages for 7 days.
+  A topic can write to a new topic ( we can join 2 topic together)
+
+
+Message:
+  The smallest unit of data in Kafka.
+  each message has a incremental id and an offset.
+  depending of the key it will assign the message to a partition.
+  Contains a key, value, offset, and timestamp.
+  user with the same key will always go to same partition.
+
+Zooker:
+  manage distributed system.
+  leader election, when current leader is down.
+
+
+# create a topic
+
+kafka-topics --create --topic=messages --bootstrap-server=localhost:9092 --replication-factor=1 --partitions=3
+kafka-topics --create --topic=movies --bootstrap-server=localhost:9092 --replication-factor=1 --partitions=3
+
+# list all topic
+
+kafka-topics --list --bootstrap-server=localhost:9092
+
+# create a producer
+kafka-console-producer --bootstrap-server=localhost:9092  --topic=movies  --property=parse.key=true  --property key.separator=:
+
+# create a consumer ( from beiginning cmd)
+we did it  from the konduktor API
+kafka-console-consumer --bootstrap-server=localhost:9092 --topic=movies  --property=print.key=true --property print.value=true  --from-beginning
+
+# list all customer
+kafka-consumer-groups --bootstrap-server localhost:9092 --list --state
+
+#  list all the partitions that consumer has subscribed to along with the latest offset of the partition, current offset and the lag.
+kafka-consumer-groups --bootstrap-server localhost:9092 --describe --group console-consumer-43699
+
+# Check Messages: To see the actual messages in each partition:
+kafka-console-consumer --bootstrap-server localhost:9092 --topic movies --partition 2 --from-beginning
+
+# insted of using cli, use kafka python libray ( we can reduce error like this)
+# we will create a python producer
+# reading this topic book 
+# writing
+
+
+managed services:
+
+connectors: |
+  create new data integration without writing code.
+
+kafka connect: |
+  movement of data in and out of kafka. Consist of source connector and sink connector.
+  Source (in), sink ( out)
+
+ksqldb: |
+  write sql query to build straming application
+
+  stream: append only sequence of data. once a record is insert immutable, tie to a topic. you can query it. it has a schema
+  schema: similar to a table that you will deal with snowflake or a database. turn a kafka topic to a stream to query it.
+  table:  similar to stream, mutable. backed by kafka topic or stream. historical vs snapshot ( compared to stream )
+  rows: events in kafka
+  columns: field that are pulled out of json message. 
+  keys: 2 types of key, PK on table, Key on streams.
+  stream join: similar to table join, joinin on stream of data. we have a join window.
+      when working with data in motion we need a time window otherwise we will hold a lot of data in memory.
+      we join 2 stream to create a third topic 
+  windowing: query accross continuois arriving data ( calculate the average time someone spend on the last 24 hour)
+
+
+confluent: |
+  create kafka cluster
+
+Amazon S3 Source connector: |
+  key = CMLFXEOE6GUXI5CH
+  secret = rxckV5Jj9l2YcAmJOESaPVDgdyhpgtJQJcIBHvqcTJUO/YRrWfRJv4p2cHzNp6gO
+
+
+push query:
+
+pull query:
