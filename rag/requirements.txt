@@ -1,0 +1,9 @@
+openai
+flask
+pinecone
+pinecone-client
+PyGithub
+tiktoken
+nltk
+markdown
+gitpython
