@@ -19,7 +19,7 @@ index = pinecone_client.Index(INDEX_NAME)
 CHATGPT_MODEL = "gpt-4o"
 
 
-def query_pinecone(query_embedding, top_k=20):
+def query_pinecone(query_embedding, top_k=5):
     """Queries Pinecone to retrieve top_k most similar contexts to the query."""
     query_response = index.query(
         vector=query_embedding,
@@ -86,7 +86,7 @@ def ask_question():
     # 3. Extract relevant context from the metadata (assuming we stored text in metadata["text"])
     retrieved_contexts = []
     for match in pinecone_results.matches:
-        if match.score>=0:
+        if match.score>=0.3:
             metadata = match.metadata
             print(metadata)
             text = metadata.get("content", "")
