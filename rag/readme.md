@@ -50,7 +50,7 @@ We can also do fine tuning:
 - Train your model using both your data and internet data  
 - Set up a cron job to regularly pull your data and retrain the model  
 - This creates a new fine-tuned model
-
+- RAG is real time, fine tuning is batches
 In this case, there is no need for the augmentation step — the model already contains the context.  
 Basically, now we just submit the prompt.  
 ![Fine Tune Flow](image/fine_tune.png)
